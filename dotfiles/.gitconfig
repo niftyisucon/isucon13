@@ -1,0 +1,14 @@
+[color]
+    ui = auto
+[alias]
+    co = checkout
+    st = status
+    ci = commit
+    di = diff
+    br = branch
+[push]
+    default = simple
+    autoSetupRemote = true
+[user]
+    email = username@example.com
+    name = USERNAME

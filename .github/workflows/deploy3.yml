@@ -1,0 +1,77 @@
+name: deploy workflow (isu3)
+
+on:
+  workflow_dispatch:
+
+env:
+  ISUCON_HOSTS: "isu1 isu2 isu3"
+  TARGET_SERVER: isu3
+
+jobs:
+  build:
+    name: setup-go
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Build
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.21
+          check-latest: true
+
+      - run: |
+          cd ./webapp/go
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o isucondition
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          name: id_ed25519
+          known_hosts: hogehoge
+          config: ${{ vars.SSH_CONFIG }}
+      - name: run deploy script
+        working-directory: scripts/
+        run: bash deploy.sh $TARGET_SERVER
+
+  truncate:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          name: id_ed25519
+          known_hosts: hogehoge
+          config: ${{ vars.SSH_CONFIG }}
+      - name: run truncate script
+        working-directory: scripts/
+        run: bash truncate.sh $TARGET_SERVER
+
+  restart:
+    needs: truncate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          name: id_ed25519
+          known_hosts: hogehoge
+          config: ${{ vars.SSH_CONFIG }}
+      - name: run restart script
+        working-directory: scripts/
+        run: bash restart.sh $TARGET_SERVER

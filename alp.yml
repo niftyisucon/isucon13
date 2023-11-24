@@ -1,0 +1,56 @@
+---
+sort: sum
+reverse: true
+query_string: # boolean
+query_string_ignore_values: # boolean
+decode_uri: # boolean
+format: markdown
+limit: # 5000
+noheaders: # boolean
+show_footers: # boolean
+matching_groups:
+  - /api/admin/tenants/add
+  - /api/admin/tenants/billing
+  - /api/organizer/players
+  - /api/organizer/players/add
+  - /api/organizer/player/[a-zA-Z0-9]+/disqualified
+  - /api/organizer/competitions/add
+  - /api/organizer/competition/[a-zA-Z0-9]+/finish
+  - /api/organizer/competition/[a-zA-Z0-9]+/score
+  - /api/organizer/billing
+  - /api/organizer/competitions
+  - /api/player/player/[a-zA-Z0-9]+
+  - /api/player/competition/[a-zA-Z0-9]+/ranking
+  - /api/player/competitions
+  - /api/me
+  - /initialize
+filters: # string
+output: # string(comma separated)
+pos_file: # string
+nosave_pos: # boolean
+percentiles: # array
+ltsv:
+  apptime_label: # apptime
+  status_label: # status code
+  size_label: # size
+  method_label: # method
+  uri_label: # uri
+  time_label: # time
+json:
+  uri_key: # string
+  method_key: # string
+  time_key: # string
+  response_time_key: # string
+  body_bytes_key: # string
+  status_key: # string
+regexp:
+  pattern: # string
+  uri_subexp: # string
+  method_subexp: # string
+  time_subexp: # string
+  response_time_subexp: # string
+  body_bytes_subexp: # string
+  status_subexp: # string
+pcap:
+  server_ips: # array
+  server_port: # number

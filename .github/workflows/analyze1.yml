@@ -1,0 +1,33 @@
+name: analyze workflow (isu1)
+
+on:
+  workflow_dispatch:
+
+env:
+  ISUCON_HOSTS: "isu1 isu2 isu3"
+  TARGET_SERVER: isu1
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          name: id_ed25519
+          known_hosts: hogehoge
+          config: ${{ vars.SSH_CONFIG }}
+      - name: run analyze.sh
+        working-directory: scripts/
+        run: bash analyze.sh -s $TARGET_SERVER
+      - name: create issue
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const script = require("${{ github.workspace }}/scripts/log_reporter.js");
+            console.log(script({github, context}))

@@ -1,0 +1,42 @@
+name: truncate_restart workflow (isu1)
+
+on:
+  workflow_dispatch:
+
+env:
+  ISUCON_HOSTS: "isu1 isu2 isu3"
+  TARGET_SERVER: isu1
+
+jobs:
+  truncate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          name: id_ed25519
+          known_hosts: hogehoge
+          config: ${{ vars.SSH_CONFIG }}
+      - name: run truncate script
+        working-directory: scripts/
+        run: bash truncate.sh
+
+  restart:
+    needs: truncate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          name: id_ed25519
+          known_hosts: hogehoge
+          config: ${{ vars.SSH_CONFIG }}
+      - name: run restart script
+        working-directory: scripts/
+        run: bash restart.sh
