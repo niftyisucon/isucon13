@@ -6,12 +6,14 @@ help() {
 
  Options
     -h  show this help
+    -n  dry-run
 HELP
     exit 0
 }
 
-while getopts "h" OPT; do
+while getopts "nh" OPT; do
     case $OPT in
+        n) OPT_DRY_RUN=1 ;;
         h) help ;;
         *) exit ;;
     esac
@@ -31,8 +33,6 @@ main() {
         rsync $RSYNC_OPTION ../alp.yml $server:/home/isucon/alp.yml
         ssh -t $server "sudo cat /var/log/nginx/access_ltsv.log | alp ltsv --config /home/isucon/alp.yml > /tmp/alp_result.txt"
         rsync $RSYNC_OPTION $server:/tmp/alp_result.txt ./
-
-        # TODO: create issue
     done
 }
 

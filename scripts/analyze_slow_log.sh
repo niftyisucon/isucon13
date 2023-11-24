@@ -5,13 +5,15 @@ help() {
  Usage: $0 [options...] <arg>
 
  Options
-    -h              show this help
+    -h  show this help
+    -n  dry-run
 HELP
     exit 0
 }
 
-while getopts "h" OPT; do
+while getopts "nh" OPT; do
     case $OPT in
+        n) OPT_DRY_RUN=1 ;;
         h) help ;;
         *) exit ;;
     esac
@@ -31,8 +33,6 @@ main() {
         # ssh -t $server "sudo cat /var/log/mysql/slow.log | pt-query-digest --limit 100% --since '\`date '+%F %T' -d '-5 minutes\`' --utc' > /tmp/pt_result.txt"
         ssh -t $server "sudo cat /var/log/mysql/slow.log | pt-query-digest --limit 100% > /tmp/pt_result.txt"
         rsync $RSYNC_OPTION $server:/tmp/pt_result.txt ./
-
-        # TODO: add issue comment
     done
 }
 
