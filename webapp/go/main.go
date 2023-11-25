@@ -22,6 +22,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	echolog "github.com/labstack/gommon/log"
+	"github.com/redis/go-redis/v9"
 )
 
 const (
@@ -33,6 +34,7 @@ const (
 var (
 	powerDNSSubdomainAddress string
 	dbConn                   *sqlx.DB
+	redisClient              *redis.Client
 	secret                   = []byte("isucon13_session_cookiestore_defaultsecret")
 )
 

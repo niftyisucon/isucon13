@@ -13,6 +13,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
+	"github.com/redis/go-redis/v9"
 )
 
 type ReserveLivestreamRequest struct {
@@ -52,6 +53,14 @@ type Livestream struct {
 	Tags         []Tag  `json:"tags"`
 	StartAt      int64  `json:"start_at"`
 	EndAt        int64  `json:"end_at"`
+}
+
+func (l *Livestream) UnmarshalBinary(data []byte) error {
+	return json.Unmarshal(data, l)
+}
+
+func (l Livestream) MarshalBinary() ([]byte, error) {
+	return json.Marshal(l)
 }
 
 type LivestreamTagModel struct {
@@ -485,6 +494,14 @@ func getLivecommentReportsHandler(c echo.Context) error {
 }
 
 func fillLivestreamResponse(ctx context.Context, tx *sqlx.Tx, livestreamModel LivestreamModel) (Livestream, error) {
+	var livestream Livestream
+	if err := redisClient.Get(ctx, "user:"+strconv.Itoa(int(livestreamModel.UserID))+":livestream:"+strconv.Itoa(int(livestreamModel.ID))).Scan(&livestream); err != nil {
+		if err != redis.Nil {
+			return Livestream{}, err
+		}
+	} else {
+		return livestream, nil
+	}
 	ownerModel := UserModel{}
 	if err := tx.GetContext(ctx, &ownerModel, "SELECT * FROM users WHERE id = ?", livestreamModel.UserID); err != nil {
 		return Livestream{}, err
@@ -523,7 +540,7 @@ func fillLivestreamResponse(ctx context.Context, tx *sqlx.Tx, livestreamModel Li
 		}
 	}
 
-	livestream := Livestream{
+	livestream = Livestream{
 		ID:           livestreamModel.ID,
 		Owner:        owner,
 		Title:        livestreamModel.Title,
@@ -533,6 +550,9 @@ func fillLivestreamResponse(ctx context.Context, tx *sqlx.Tx, livestreamModel Li
 		ThumbnailUrl: livestreamModel.ThumbnailUrl,
 		StartAt:      livestreamModel.StartAt,
 		EndAt:        livestreamModel.EndAt,
+	}
+	if err := redisClient.Set(ctx, "user:"+strconv.Itoa(int(livestreamModel.UserID))+":livestream:"+strconv.Itoa(int(livestreamModel.ID)), livestream, 0).Err(); err != nil {
+		return Livestream{}, err
 	}
 	return livestream, nil
 }

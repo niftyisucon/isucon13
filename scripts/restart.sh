@@ -50,17 +50,24 @@ main() {
     done
 
     # redis
-    # for server in ${ISUCON_HOSTS[@]}; do
-    #     [ ! -z "$TARGET_SERVER" ] && [ $server != "$TARGET_SERVER" ] && continue
-    #     ssh -t $server "sudo systemctl stop redis.service"
-    #     ssh -t $server "sudo systemctl start redis.service"
-    # done
+    for server in ${ISUCON_HOSTS[@]}; do
+        [ ! -z "$TARGET_SERVER" ] && [ $server != "$TARGET_SERVER" ] && continue
+        ssh -t $server "sudo systemctl stop redis.service"
+        ssh -t $server "sudo systemctl start redis.service"
+    done
 
     # pdns
     for server in ${ISUCON_HOSTS[@]}; do
         [ ! -z "$TARGET_SERVER" ] && [ $server != "$TARGET_SERVER" ] && continue
         ssh -t $server "sudo systemctl stop pdns.service"
         ssh -t $server "sudo systemctl start pdns.service"
+    done
+
+    # pdns-recursor.service
+    for server in ${ISUCON_HOSTS[@]}; do
+        [ ! -z "$TARGET_SERVER" ] && [ $server != "$TARGET_SERVER" ] && continue
+        ssh -t $server "sudo systemctl stop pdns-recursor.service"
+        ssh -t $server "sudo systemctl start pdns-recursor.service"
     done
 
     # cd $ISUCON_HOME/webapp/go

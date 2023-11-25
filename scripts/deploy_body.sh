@@ -91,6 +91,14 @@ main() {
         rsync $RSYNC_OPTION $LOCAL_PATH root@$server:$REMOTE_PATH
     done
 
+    # pdns-recurse.service
+    for server in ${ISUCON_HOSTS[@]}; do
+        [ ! -z "$TARGET_SERVER" ] && [ $server != "$TARGET_SERVER" ] && continue
+        REMOTE_PATH=/etc/powerdns/recursor.conf
+        LOCAL_PATH=$(to_local_path $REMOTE_PATH $server)
+        rsync $RSYNC_OPTION $LOCAL_PATH root@$server:$REMOTE_PATH
+    done
+
     # systemd
     for server in ${ISUCON_HOSTS[@]}; do
         [ ! -z "$TARGET_SERVER" ] && [ $server != "$TARGET_SERVER" ] && continue
