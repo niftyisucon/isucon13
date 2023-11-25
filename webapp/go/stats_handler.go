@@ -249,7 +249,7 @@ func getLivestreamStatisticsHandler(c echo.Context) error {
     GROUP BY 
         l.id
     ORDER BY 
-        total_reactions + total_tips DESC
+        total_reactions + total_tips
 `
 
 	// クエリを実行してデータを取得する部分
