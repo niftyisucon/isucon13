@@ -495,7 +495,7 @@ func getLivecommentReportsHandler(c echo.Context) error {
 
 func fillLivestreamResponse(ctx context.Context, tx *sqlx.Tx, livestreamModel LivestreamModel) (Livestream, error) {
 	var livestream Livestream
-	if err := redisClient.Get(ctx, "livestream:"+strconv.Itoa(int(livestreamModel.ID))).Scan(&livestream); err != nil {
+	if err := redisClient.Get(ctx, "user:"+strconv.Itoa(int(livestreamModel.UserID))+":livestream:"+strconv.Itoa(int(livestreamModel.ID))).Scan(&livestream); err != nil {
 		if err != redis.Nil {
 			return Livestream{}, err
 		}
@@ -551,7 +551,7 @@ func fillLivestreamResponse(ctx context.Context, tx *sqlx.Tx, livestreamModel Li
 		StartAt:      livestreamModel.StartAt,
 		EndAt:        livestreamModel.EndAt,
 	}
-	if err := redisClient.Set(ctx, "livestream:"+strconv.Itoa(int(livestreamModel.ID)), livestream, 0).Err(); err != nil {
+	if err := redisClient.Set(ctx, "user:"+strconv.Itoa(int(livestreamModel.UserID))+":livestream:"+strconv.Itoa(int(livestreamModel.ID)), livestream, 0).Err(); err != nil {
 		return Livestream{}, err
 	}
 	return livestream, nil

@@ -135,6 +135,12 @@ func postIconHandler(c echo.Context) error {
 		c.Logger().Errorf("failed to write icon file: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
+	keys := redisClient.Keys(c.Request().Context(), fmt.Sprintf("user:%d:*", userID)).Val()
+	for _, key := range keys {
+		if err := redisClient.Del(c.Request().Context(), key).Err(); err != nil {
+			return c.NoContent(http.StatusInternalServerError)
+		}
+	}
 
 	return c.JSON(http.StatusCreated, &PostIconResponse{
 		ID: 1,
