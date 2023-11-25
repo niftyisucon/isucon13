@@ -42,6 +42,7 @@ main() {
         rsync $RSYNC_OPTION root@$server:/etc/mysql/ $ISUCON_HOME/etc/$server/mysql/
         rsync $RSYNC_OPTION root@$server:/etc/systemd/ $ISUCON_HOME/etc/$server/systemd/
         rsync $RSYNC_OPTION root@$server:/etc/redis/ $ISUCON_HOME/etc/$server/redis/
+        rsync $RSYNC_OPTION root@$server:/etc/powerdns/ $ISUCON_HOME/etc/$server/powerdns/
     done
 }
 

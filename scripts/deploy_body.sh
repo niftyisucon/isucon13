@@ -70,15 +70,23 @@ main() {
         rsync $RSYNC_OPTION $LOCAL_PATH root@$server:$REMOTE_PATH
 
         # TODO (都度設定する)
-        REMOTE_PATH=/etc/nginx/sites-available/isuports.conf
+        REMOTE_PATH=/etc/nginx/sites-enabled/isupipe.conf
         LOCAL_PATH=$(to_local_path $REMOTE_PATH $server)
         rsync $RSYNC_OPTION $LOCAL_PATH root@$server:$REMOTE_PATH
     done
 
     # redis
+    # for server in ${ISUCON_HOSTS[@]}; do
+    #     [ ! -z "$TARGET_SERVER" ] && [ $server != "$TARGET_SERVER" ] && continue
+    #     REMOTE_PATH=/etc/redis/redis.conf
+    #     LOCAL_PATH=$(to_local_path $REMOTE_PATH $server)
+    #     rsync $RSYNC_OPTION $LOCAL_PATH root@$server:$REMOTE_PATH
+    # done
+
+    # pdns
     for server in ${ISUCON_HOSTS[@]}; do
         [ ! -z "$TARGET_SERVER" ] && [ $server != "$TARGET_SERVER" ] && continue
-        REMOTE_PATH=/etc/redis/redis.conf
+        REMOTE_PATH=/etc/powerdns/pdns.conf
         LOCAL_PATH=$(to_local_path $REMOTE_PATH $server)
         rsync $RSYNC_OPTION $LOCAL_PATH root@$server:$REMOTE_PATH
     done
@@ -95,7 +103,7 @@ main() {
     for server in ${ISUCON_HOSTS[@]}; do
         [ ! -z "$TARGET_SERVER" ] && [ $server != "$TARGET_SERVER" ] && continue
         # TODO (都度設定する)
-        rsync $RSYNC_OPTION $ISUCON_HOME/webapp/docker-compose-go.yml $server:/home/isucon/webapp/docker-compose-go.yml
+        # rsync $RSYNC_OPTION $ISUCON_HOME/webapp/docker-compose-go.yml $server:/home/isucon/webapp/docker-compose-go.yml
 
         # TODO (都度設定する)
         rsync $RSYNC_OPTION $ISUCON_HOME/webapp/go/ $server:/home/isucon/webapp/go/
