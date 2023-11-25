@@ -165,12 +165,7 @@ func postIconHandler(c echo.Context) error {
 
 	_, err = tx.ExecContext(ctx, "INSERT INTO icons (user_id, hash, image) VALUES (?, ?, ?)", userID, iconHash, emptyByteSlice)
 	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to insert user icon: "+err.Error())
-		// 既に存在する場合は無視
-		if !errors.Is(err, os.ErrExist) {
-			c.Logger().Errorf("failed to create icons directory: %v", err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to insert new user icon: "+err.Error())
 	}
 
 	if err := tx.Commit(); err != nil {
