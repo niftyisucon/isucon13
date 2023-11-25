@@ -407,9 +407,12 @@ func moderateHandler(c echo.Context) error {
 
 		// ライブコメントを一括で削除
 		if len(commentIDs) > 0 {
-			query := "DELETE FROM livecomments WHERE id IN (?)"
-			_, err := dbConn.Exec(query, commentIDs)
+			query, params, err := sqlx.In("DELETE FROM livecomments WHERE id IN (?)", commentIDs)
 			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, "failed to generate query: "+err.Error())
+			}
+			query = dbConn.Rebind(query)
+			if _, err := dbConn.Exec(query, params...); err != nil {
 				return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete comments: "+err.Error())
 			}
 		}
