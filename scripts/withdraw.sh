@@ -42,10 +42,10 @@ main() {
         # rsync $RSYNC_OPTION root@$server:/etc/mysql/ $ISUCON_HOME/etc/$server/mysql/
         # rsync $RSYNC_OPTION root@$server:/etc/systemd/ $ISUCON_HOME/etc/$server/systemd/
         # rsync $RSYNC_OPTION root@$server:/etc/redis/ $ISUCON_HOME/etc/$server/redis/
-        # rsync $RSYNC_OPTION root@$server:/etc/powerdns/ $ISUCON_HOME/etc/$server/powerdns/
+        rsync $RSYNC_OPTION root@$server:/etc/powerdns/ $ISUCON_HOME/etc/$server/powerdns/
 
         # opt
-        rsync $RSYNC_OPTION root@$server:/opt/init_zone_once.sh $ISUCON_HOME/opt/$server/init_zone_once.sh
+        # rsync $RSYNC_OPTION root@$server:/opt/init_zone_once.sh $ISUCON_HOME/opt/$server/init_zone_once.sh
     done
 }
 
