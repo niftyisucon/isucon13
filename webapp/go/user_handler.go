@@ -104,16 +104,11 @@ func getIconHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user: "+err.Error())
 	}
 
-	var image []byte
-	if err := tx.GetContext(ctx, &image, "SELECT image FROM icons WHERE user_id = ?", user.ID); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return c.File(fallbackImage)
-		} else {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user icon: "+err.Error())
-		}
-	}
+	// nginxに任せる
+	uri := fmt.Sprintf("/icons/%d.jpg", user.ID)
+	c.Response().Header().Set("X-Accel-Redirect", uri)
 
-	return c.Blob(http.StatusOK, "image/jpeg", image)
+	return c.NoContent(http.StatusOK)
 }
 
 func postIconHandler(c echo.Context) error {
@@ -393,9 +388,9 @@ func fillUserResponse(ctx context.Context, tx *sqlx.Tx, userModel UserModel) (Us
 		return User{}, err
 	}
 
-	var image []byte
-	if err := tx.GetContext(ctx, &image, "SELECT image FROM icons WHERE user_id = ?", userModel.ID); err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
+	image, err := os.ReadFile(fmt.Sprintf("%s/%d.jpg", iconsPath, userModel.ID))
+	if err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
 			return User{}, err
 		}
 		image, err = os.ReadFile(fallbackImage)
@@ -403,6 +398,7 @@ func fillUserResponse(ctx context.Context, tx *sqlx.Tx, userModel UserModel) (Us
 			return User{}, err
 		}
 	}
+
 	iconHash := sha256.Sum256(image)
 
 	user := User{
