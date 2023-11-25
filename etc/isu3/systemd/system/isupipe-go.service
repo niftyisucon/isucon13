@@ -10,7 +10,7 @@ EnvironmentFile=/home/isucon/env.sh
 
 User=isucon
 Group=isucon
-ExecStart=/home/isucon/webapp/go/isupipe
+ExecStart=go run /home/isucon/webapp/go/main.go
 ExecStop=/bin/kill -s QUIT $MAINPID
 
 Restart=on-failure
