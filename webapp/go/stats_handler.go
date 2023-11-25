@@ -66,9 +66,8 @@ func (r UserRanking) Less(i, j int) bool {
 
 func getUserStatisticsHandler(c echo.Context) error {
 	type RankingModel struct {
-		Username string `db:"Username"`
-		Score    int64  `db:"Score"`
-		Rank     int64  `db:"UserRank"`
+		UserID int64 `db:"UserID"`
+		Score  int64 `db:"Score"`
 	}
 	ctx := c.Request().Context()
 
@@ -95,13 +94,12 @@ func getUserStatisticsHandler(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user: "+err.Error())
 		}
 	}
-	var stat RankingModel
+	var stats []*RankingModel
 
 	query := `
       SELECT
-          u.name AS Username,
-          (COALESCE(reactions.reaction_count, 0) + COALESCE(tips.tip_count, 0)) AS Score,
-          RANK() OVER (ORDER BY (COALESCE(reactions.reaction_count, 0) + COALESCE(tips.tip_count, 0)) DESC) AS UserRank
+          u.id AS UserID,
+          (COALESCE(reactions.reaction_count, 0) + COALESCE(tips.tip_count, 0)) AS Score
       FROM
           users u
       LEFT JOIN (
@@ -126,12 +124,19 @@ func getUserStatisticsHandler(c echo.Context) error {
           GROUP BY
               l.user_id
       ) AS tips ON tips.user_id = u.id
-      WHERE
-          u.name = ?
-
+      ORDER BY Score, UserID
     `
-	if err := tx.GetContext(ctx, &stat, query, username); err != nil && !errors.Is(err, sql.ErrNoRows) {
+	if err := tx.SelectContext(ctx, &stats, query); err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to count reactions: "+err.Error())
+	}
+
+	var rank int64 = 1
+	for i := len(stats) - 1; i >= 0; i-- {
+		entry := stats[i]
+		if entry.UserID == user.ID {
+			break
+		}
+		rank++
 	}
 
 	// リアクション数
@@ -191,15 +196,15 @@ func getUserStatisticsHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to find favorite emoji: "+err.Error())
 	}
 
-	stats := UserStatistics{
-		Rank:              stat.Rank,
+	ranking := UserStatistics{
+		Rank:              rank,
 		ViewersCount:      viewersCount,
 		TotalReactions:    totalReactions,
 		TotalLivecomments: totalLivecomments,
 		TotalTip:          totalTip,
 		FavoriteEmoji:     favoriteEmoji,
 	}
-	return c.JSON(http.StatusOK, stats)
+	return c.JSON(http.StatusOK, ranking)
 }
 
 func getLivestreamStatisticsHandler(c echo.Context) error {
