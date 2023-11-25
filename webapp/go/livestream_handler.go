@@ -55,7 +55,7 @@ type Livestream struct {
 	EndAt        int64  `json:"end_at"`
 }
 
-func (l *Livestream) UnMarshalBinary(data []byte) error {
+func (l *Livestream) UnmarshalBinary(data []byte) error {
 	return json.Unmarshal(data, l)
 }
 
