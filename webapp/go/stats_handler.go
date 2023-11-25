@@ -66,8 +66,8 @@ func (r UserRanking) Less(i, j int) bool {
 
 func getUserStatisticsHandler(c echo.Context) error {
 	type RankingModel struct {
-		UserID int64 `db:"UserID"`
-		Score  int64 `db:"Score"`
+		UserName string `db:"UserName"`
+		Score    int64  `db:"Score"`
 	}
 	ctx := c.Request().Context()
 
@@ -98,7 +98,7 @@ func getUserStatisticsHandler(c echo.Context) error {
 
 	query := `
       SELECT
-          u.id AS UserID,
+          u.name AS UserName,
           (COALESCE(reactions.reaction_count, 0) + COALESCE(tips.tip_count, 0)) AS Score
       FROM
           users u
@@ -124,7 +124,7 @@ func getUserStatisticsHandler(c echo.Context) error {
           GROUP BY
               l.user_id
       ) AS tips ON tips.user_id = u.id
-      ORDER BY Score, UserID
+      ORDER BY Score, UserName
     `
 	if err := tx.SelectContext(ctx, &stats, query); err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to count reactions: "+err.Error())
@@ -133,7 +133,7 @@ func getUserStatisticsHandler(c echo.Context) error {
 	var rank int64 = 1
 	for i := len(stats) - 1; i >= 0; i-- {
 		entry := stats[i]
-		if entry.UserID == user.ID {
+		if entry.UserName == user.Name {
 			break
 		}
 		rank++
