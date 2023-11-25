@@ -21,6 +21,7 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	echolog "github.com/labstack/gommon/log"
+	"github.com/redis/go-redis/v9"
 )
 
 const (
@@ -32,6 +33,7 @@ const (
 var (
 	powerDNSSubdomainAddress string
 	dbConn                   *sqlx.DB
+	redisClient              *redis.Client
 	secret                   = []byte("isucon13_session_cookiestore_defaultsecret")
 )
 
@@ -150,6 +152,15 @@ func initializeHandler(c echo.Context) error {
 
 	if err := initializeIcons(); err != nil {
 		c.Logger().Warnf("initializeIcons failed with err=%s", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to initialize: "+err.Error())
+	}
+
+	redisClient = redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+	if err := redisClient.FlushAll(c.Request().Context()).Err(); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to initialize: "+err.Error())
 	}
 

@@ -494,11 +494,6 @@ func getLivecommentReportsHandler(c echo.Context) error {
 }
 
 func fillLivestreamResponse(ctx context.Context, tx *sqlx.Tx, livestreamModel LivestreamModel) (Livestream, error) {
-	redisClient := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
-	})
 	var livestream Livestream
 	if err := redisClient.Get(ctx, "livestream:"+strconv.Itoa(int(livestreamModel.ID))).Scan(&livestream); err != nil {
 		if err != redis.Nil {
