@@ -9,33 +9,33 @@ limit: # 5000
 noheaders: # boolean
 show_footers: # boolean
 matching_groups:
+  - /api/icon
   - /api/initialize
-  - /api/tag
-  - /api/user/[a-zA-Z0-9]+/theme
-  - /api/livestream/reservation
-  - /api/livestream/search
-  - /api/livestream
-  - /api/user/[a-zA-Z0-9]+/livestream
+  - /api/livestream$
   - /api/livestream/[a-zA-Z0-9]+$
+  - /api/livestream/[a-zA-Z0-9]+/enter
+  - /api/livestream/[a-zA-Z0-9]+/exit
   - /api/livestream/[a-zA-Z0-9]+/livecomment
   - /api/livestream/[a-zA-Z0-9]+/livecomment
+  - /api/livestream/[a-zA-Z0-9]+/livecomment/[a-zA-Z0-9]+/report
+  - /api/livestream/[a-zA-Z0-9]+/moderate
+  - /api/livestream/[a-zA-Z0-9]+/ngwords
   - /api/livestream/[a-zA-Z0-9]+/reaction
   - /api/livestream/[a-zA-Z0-9]+/reaction
   - /api/livestream/[a-zA-Z0-9]+/report
-  - /api/livestream/[a-zA-Z0-9]+/ngwords
-  - /api/livestream/[a-zA-Z0-9]+/livecomment/[a-zA-Z0-9]+/report
-  - /api/livestream/[a-zA-Z0-9]+/moderate
-  - /api/livestream/[a-zA-Z0-9]+/enter
-  - /api/livestream/[a-zA-Z0-9]+/exit
-  - /api/register
-  - /api/login
-  - /api/user/me
-  - /api/user/[a-zA-Z0-9]+$
-  - /api/user/[a-zA-Z0-9]+/statistics
-  - /api/user/[a-zA-Z0-9]+/icon
-  - /api/icon
   - /api/livestream/[a-zA-Z0-9]+/statistics
+  - /api/livestream/reservation
+  - /api/livestream/search
+  - /api/login
   - /api/payment
+  - /api/register
+  - /api/tag
+  - /api/user/[a-zA-Z0-9]+$
+  - /api/user/[a-zA-Z0-9]+/icon
+  - /api/user/[a-zA-Z0-9]+/livestream
+  - /api/user/[a-zA-Z0-9]+/statistics
+  - /api/user/[a-zA-Z0-9]+/theme
+  - /api/user/me
 filters: # string
 output: # string(comma separated)
 pos_file: # string
