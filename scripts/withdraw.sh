@@ -29,11 +29,12 @@ ISUCON_HOME=$(
 )
 [ -z "$ISUCON_HOSTS" ] && ISUCON_HOSTS="isu1 isu2 isu3"
 [ -z "$TARGET_SERVER" ] && TARGET_SERVER="isu1"
-[ -z "$ISUCON_SERVICE" ] && ISUCON_SERVICE="isuports.service"
+[ -z "$ISUCON_SERVICE" ] && ISUCON_SERVICE="isupipe-go.service"
 RSYNC_OPTION="-avzc --no-perms --no-owner --no-group --omit-dir-times --delete"
 [ "$OPT_DRY_RUN" == 1 ] && RSYNC_OPTION="-avzc --no-perms --no-owner --no-group --omit-dir-times --delete -n"
 
 main() {
+    # rsync $RSYNC_OPTION isu1:~/webapp/ $ISUCON_HOME/webapp/
     for server in ${ISUCON_HOSTS[@]}; do
         [ ! -z "$TARGET_SERVER" ] && [ $server != "$TARGET_SERVER" ] && continue
         # TODO (都度設定する)

@@ -29,7 +29,7 @@ ISUCON_HOME=$(
 )
 [ -z "$ISUCON_HOSTS" ] && ISUCON_HOSTS="isu1 isu2 isu3"
 [ -z "$TARGET_SERVER" ] && TARGET_SERVER="isu1"
-[ -z "$ISUCON_SERVICE" ] && ISUCON_SERVICE="isuports.service"
+[ -z "$ISUCON_SERVICE" ] && ISUCON_SERVICE="isupipe-go.service"
 RSYNC_OPTION="-avzc --no-perms --no-owner --no-group --delete"
 [ "$OPT_DRY_RUN" == 1 ] && RSYNC_OPTION="-avzc --no-perms --no-owner --no-group --delete -n"
 

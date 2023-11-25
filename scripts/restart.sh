@@ -24,7 +24,7 @@ shift $((OPTIND - 1))
 TARGET_SERVER=$1
 [ -z "$ISUCON_HOSTS" ] && ISUCON_HOSTS="isu1 isu2 isu3"
 [ -z "$TARGET_SERVER" ] && TARGET_SERVER="isu1"
-[ -z "$ISUCON_SERVICE" ] && ISUCON_SERVICE="isuports.service"
+[ -z "$ISUCON_SERVICE" ] && ISUCON_SERVICE="isupipe-go.service"
 RSYNC_OPTION="-avzc --delete"
 [ "$OPT_DRY_RUN" == 1 ] && RSYNC_OPTION="-avzc -n --delete"
 
