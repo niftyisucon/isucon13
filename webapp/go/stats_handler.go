@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
-	"sort"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -66,6 +65,10 @@ func (r UserRanking) Less(i, j int) bool {
 }
 
 func getUserStatisticsHandler(c echo.Context) error {
+	type RankingModel struct {
+		UserName string `db:"UserName"`
+		Score    int64  `db:"Score"`
+	}
 	ctx := c.Request().Context()
 
 	if err := verifyUserSession(c); err != nil {
@@ -91,47 +94,46 @@ func getUserStatisticsHandler(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusInternalServerError, "failed to get user: "+err.Error())
 		}
 	}
+	var stats []*RankingModel
 
-	// ランク算出
-	var users []*UserModel
-	if err := tx.SelectContext(ctx, &users, "SELECT * FROM users"); err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, "failed to get users: "+err.Error())
+	query := `
+      SELECT
+          u.name AS UserName,
+          (COALESCE(reactions.reaction_count, 0) + COALESCE(tips.tip_count, 0)) AS Score
+      FROM
+          users u
+      LEFT JOIN (
+          SELECT
+              l.user_id,
+              COUNT(*) AS reaction_count
+          FROM
+              livestreams l
+          INNER JOIN
+              reactions r ON r.livestream_id = l.id
+          GROUP BY
+              l.user_id
+      ) AS reactions ON reactions.user_id = u.id
+      LEFT JOIN (
+          SELECT
+              l.user_id,
+              IFNULL(SUM(lc.tip), 0) AS tip_count
+          FROM
+              livestreams l
+          INNER JOIN
+              livecomments lc ON lc.livestream_id = l.id
+          GROUP BY
+              l.user_id
+      ) AS tips ON tips.user_id = u.id
+      ORDER BY Score, UserName
+    `
+	if err := tx.SelectContext(ctx, &stats, query); err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to count reactions: "+err.Error())
 	}
-
-	var ranking UserRanking
-	for _, user := range users {
-		var reactions int64
-		query := `
-		SELECT COUNT(*) FROM users u
-		INNER JOIN livestreams l ON l.user_id = u.id
-		INNER JOIN reactions r ON r.livestream_id = l.id
-		WHERE u.id = ?`
-		if err := tx.GetContext(ctx, &reactions, query, user.ID); err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to count reactions: "+err.Error())
-		}
-
-		var tips int64
-		query = `
-		SELECT IFNULL(SUM(l2.tip), 0) FROM users u
-		INNER JOIN livestreams l ON l.user_id = u.id	
-		INNER JOIN livecomments l2 ON l2.livestream_id = l.id
-		WHERE u.id = ?`
-		if err := tx.GetContext(ctx, &tips, query, user.ID); err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return echo.NewHTTPError(http.StatusInternalServerError, "failed to count tips: "+err.Error())
-		}
-
-		score := reactions + tips
-		ranking = append(ranking, UserRankingEntry{
-			Username: user.Name,
-			Score:    score,
-		})
-	}
-	sort.Sort(ranking)
 
 	var rank int64 = 1
-	for i := len(ranking) - 1; i >= 0; i-- {
-		entry := ranking[i]
-		if entry.Username == username {
+	for i := len(stats) - 1; i >= 0; i-- {
+		entry := stats[i]
+		if entry.UserName == user.Name {
 			break
 		}
 		rank++
@@ -139,7 +141,7 @@ func getUserStatisticsHandler(c echo.Context) error {
 
 	// リアクション数
 	var totalReactions int64
-	query := `SELECT COUNT(*) FROM users u 
+	query = `SELECT COUNT(*) FROM users u 
     INNER JOIN livestreams l ON l.user_id = u.id 
     INNER JOIN reactions r ON r.livestream_id = l.id
     WHERE u.name = ?
@@ -194,7 +196,7 @@ func getUserStatisticsHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to find favorite emoji: "+err.Error())
 	}
 
-	stats := UserStatistics{
+	ranking := UserStatistics{
 		Rank:              rank,
 		ViewersCount:      viewersCount,
 		TotalReactions:    totalReactions,
@@ -202,7 +204,7 @@ func getUserStatisticsHandler(c echo.Context) error {
 		TotalTip:          totalTip,
 		FavoriteEmoji:     favoriteEmoji,
 	}
-	return c.JSON(http.StatusOK, stats)
+	return c.JSON(http.StatusOK, ranking)
 }
 
 func getLivestreamStatisticsHandler(c echo.Context) error {
