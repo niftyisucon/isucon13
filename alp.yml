@@ -16,7 +16,7 @@ matching_groups:
   - /api/livestream/search
   - /api/livestream
   - /api/user/[a-zA-Z0-9]+/livestream
-  - /api/livestream/[a-zA-Z0-9]+
+  - /api/livestream/[a-zA-Z0-9]+$
   - /api/livestream/[a-zA-Z0-9]+/livecomment
   - /api/livestream/[a-zA-Z0-9]+/livecomment
   - /api/livestream/[a-zA-Z0-9]+/reaction
@@ -30,7 +30,7 @@ matching_groups:
   - /api/register
   - /api/login
   - /api/user/me
-  - /api/user/[a-zA-Z0-9]+
+  - /api/user/[a-zA-Z0-9]+$
   - /api/user/[a-zA-Z0-9]+/statistics
   - /api/user/[a-zA-Z0-9]+/icon
   - /api/icon
