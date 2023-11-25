@@ -163,7 +163,7 @@ func postIconHandler(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete old user icon: "+err.Error())
 	}
 
-	_, err = tx.ExecContext(ctx, "INSERT INTO icons (user_id, hash, emptyByteSlice) VALUES (?, ?, ?)", userID, iconHash, emptyByteSlice)
+	_, err = tx.ExecContext(ctx, "INSERT INTO icons (user_id, hash, image) VALUES (?, ?, ?)", userID, iconHash, emptyByteSlice)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to insert user icon: "+err.Error())
 		// 既に存在する場合は無視
