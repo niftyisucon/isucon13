@@ -146,12 +146,6 @@ func initializeIcons() error {
 }
 
 func initializeHandler(c echo.Context) error {
-	redisClient = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
-	})
-
 	// DBの接続待ち
 	for {
 		if err := dbConn.Ping(); err == nil {
@@ -262,6 +256,14 @@ func main() {
 	}
 	defer conn.Close()
 	dbConn = conn
+
+	// Redis接続
+	redisClient = redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+	defer redisClient.Close()
 
 	subdomainAddr, ok := os.LookupEnv(powerDNSSubdomainAddressEnvKey)
 	if !ok {
