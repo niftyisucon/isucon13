@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"time"
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -143,6 +144,28 @@ func initializeIcons() error {
 }
 
 func initializeHandler(c echo.Context) error {
+	redisClient = redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+
+	// DBの接続待ち
+	for {
+		if err := dbConn.Ping(); err == nil {
+			break
+		}
+		time.Sleep(time.Second)
+	}
+
+	// Redisの接続待ち
+	for {
+		if err := redisClient.Ping(c.Request().Context()).Err(); err == nil {
+			break
+		}
+		time.Sleep(time.Second)
+	}
+
 	if out, err := exec.Command("../sql/init.sh").CombinedOutput(); err != nil {
 		c.Logger().Warnf("init.sh failed with err=%s", string(out))
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to initialize: "+err.Error())
@@ -150,6 +173,10 @@ func initializeHandler(c echo.Context) error {
 
 	if err := initializeIcons(); err != nil {
 		c.Logger().Warnf("initializeIcons failed with err=%s", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to initialize: "+err.Error())
+	}
+
+	if err := redisClient.FlushAll(c.Request().Context()).Err(); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to initialize: "+err.Error())
 	}
 
