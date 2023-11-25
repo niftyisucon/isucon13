@@ -143,7 +143,7 @@ func postIconHandler(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusCreated, &PostIconResponse{
-		ID: 0,
+		ID: 1,
 	})
 }
 
