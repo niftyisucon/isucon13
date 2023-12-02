@@ -58,6 +58,13 @@ type ThemeModel struct {
 	DarkMode bool  `db:"dark_mode"`
 }
 
+type ThemeModelIconHash struct {
+	ID       int64  `db:"id"`
+	UserID   int64  `db:"user_id"`
+	DarkMode bool   `db:"dark_mode"`
+	IconHash string `db:"icon_hash"`
+}
+
 type PostUserRequest struct {
 	Name        string `json:"name"`
 	DisplayName string `json:"display_name"`
@@ -106,6 +113,7 @@ func getIconHandler(c echo.Context) error {
 }
 
 func postIconHandler(c echo.Context) error {
+	ctx := c.Request().Context()
 	if err := verifyUserSession(c); err != nil {
 		// echo.NewHTTPErrorが返っているのでそのまま出力
 		return err
@@ -140,6 +148,28 @@ func postIconHandler(c echo.Context) error {
 		if err := redisClient.Del(c.Request().Context(), key).Err(); err != nil {
 			return c.NoContent(http.StatusInternalServerError)
 		}
+	}
+
+	iconHash := fmt.Sprintf("%x", sha256.Sum256(req.Image))
+	var emptyByteSlice []byte
+
+	tx, err := dbConn.BeginTxx(ctx, nil)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to begin transaction: "+err.Error())
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.ExecContext(ctx, "DELETE FROM icons WHERE user_id = ?", userID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to delete old user icon: "+err.Error())
+	}
+
+	_, err = tx.ExecContext(ctx, "INSERT INTO icons (user_id, hash, image) VALUES (?, ?, ?)", userID, iconHash, emptyByteSlice)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to insert new user icon: "+err.Error())
+	}
+
+	if err := tx.Commit(); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to commit: "+err.Error())
 	}
 
 	return c.JSON(http.StatusCreated, &PostIconResponse{
@@ -383,23 +413,15 @@ func verifyUserSession(c echo.Context) error {
 }
 
 func fillUserResponse(ctx context.Context, tx *sqlx.Tx, userModel UserModel) (User, error) {
-	themeModel := ThemeModel{}
-	if err := tx.GetContext(ctx, &themeModel, "SELECT * FROM themes WHERE user_id = ?", userModel.ID); err != nil {
+	themeModelIconHash := ThemeModelIconHash{}
+	query := `
+	SELECT t.id as id, t.user_id as user_id, t.dark_mode as dark_mode, i.hash as icon_hash
+	FROM themes t
+	INNER JOIN icons i ON t.user_id = i.user_id
+	WHERE t.user_id = ?`
+	if err := tx.GetContext(ctx, &themeModelIconHash, query, userModel.ID); err != nil {
 		return User{}, err
 	}
-
-	image, err := os.ReadFile(fmt.Sprintf("%s/%d.jpg", iconsPath, userModel.ID))
-	if err != nil {
-		if !errors.Is(err, os.ErrNotExist) {
-			return User{}, err
-		}
-		image, err = os.ReadFile(fallbackImage)
-		if err != nil {
-			return User{}, err
-		}
-	}
-
-	iconHash := sha256.Sum256(image)
 
 	user := User{
 		ID:          userModel.ID,
@@ -407,10 +429,10 @@ func fillUserResponse(ctx context.Context, tx *sqlx.Tx, userModel UserModel) (Us
 		DisplayName: userModel.DisplayName,
 		Description: userModel.Description,
 		Theme: Theme{
-			ID:       themeModel.ID,
-			DarkMode: themeModel.DarkMode,
+			ID:       themeModelIconHash.ID,
+			DarkMode: themeModelIconHash.DarkMode,
 		},
-		IconHash: fmt.Sprintf("%x", iconHash),
+		IconHash: themeModelIconHash.IconHash,
 	}
 
 	return user, nil
